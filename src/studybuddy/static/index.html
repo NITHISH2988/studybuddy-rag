@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>StudyBuddy RAG</title>
+    <style>
+      body { font: 16px/1.5 system-ui, sans-serif; max-width: 760px; margin: 3rem auto; padding: 0 1rem; color: #18212f; }
+      textarea, input, button { font: inherit; width: 100%; box-sizing: border-box; margin: .35rem 0 1rem; padding: .65rem; }
+      textarea { min-height: 8rem; } button { cursor: pointer; } pre { white-space: pre-wrap; background: #f3f5f8; padding: 1rem; }
+      .source { border-left: 3px solid #8296b0; padding-left: .75rem; margin: .75rem 0; }
+    </style>
+  </head>
+  <body>
+    <h1>StudyBuddy</h1>
+    <p>Index notes locally, then ask questions grounded in retrieved passages.</p>
+    <form id="document-form">
+      <h2>Add notes</h2>
+      <label>Title <input id="title" required maxlength="160" value="My notes" /></label>
+      <label>Text <textarea id="text" required minlength="20"></textarea></label>
+      <button>Add notes</button>
+    </form>
+    <form id="upload-form">
+      <label>Or upload a TXT, Markdown, PDF, or DOCX file <input id="file" type="file" accept=".txt,.md,.pdf,.docx" /></label>
+      <button>Upload document</button>
+    </form>
+    <form id="ask-form">
+      <h2>Ask a question</h2>
+      <label>Question <input id="question" required minlength="3" /></label>
+      <button>Ask</button>
+    </form>
+    <p id="status" role="status"></p>
+    <h2>Answer</h2><pre id="answer"></pre>
+    <h2>Sources</h2><div id="sources"></div>
+    <script>
+      const status = document.querySelector('#status');
+      const request = async (url, options) => {
+        const response = await fetch(url, options);
+        const body = await response.json();
+        if (!response.ok) throw new Error(body.detail || 'Request failed');
+        return body;
+      };
+      document.querySelector('#document-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          const body = await request('/documents', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({title: document.querySelector('#title').value, text: document.querySelector('#text').value}) });
+          status.textContent = `Indexed ${body.chunks_added} chunks.`;
+        } catch (error) { status.textContent = error.message; }
+      });
+      document.querySelector('#upload-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const file = document.querySelector('#file').files[0];
+        if (!file) { status.textContent = 'Choose a document first.'; return; }
+        const form = new FormData(); form.append('file', file);
+        try { const body = await request('/upload', {method:'POST', body:form}); status.textContent = `Indexed ${body.chunks_added} chunks.`; }
+        catch (error) { status.textContent = error.message; }
+      });
+      document.querySelector('#ask-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          const body = await request('/ask', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({question:document.querySelector('#question').value})});
+          document.querySelector('#answer').textContent = body.answer;
+          document.querySelector('#sources').replaceChildren(...body.citations.map((source, index) => {
+            const element = document.createElement('p'); element.className = 'source';
+            element.textContent = `[S${index+1}] ${source.title} · score ${source.score.toFixed(3)} — ${source.excerpt}`;
+            return element;
+          }));
+          status.textContent = '';
+        } catch (error) { status.textContent = error.message; }
+      });
+    </script>
+  </body>
+</html>
