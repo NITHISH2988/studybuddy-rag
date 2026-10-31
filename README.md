@@ -1,6 +1,6 @@
 # StudyBuddy RAG
 
-StudyBuddy indexes study notes, retrieves semantically similar passages, and answers questions from those passages with source citations. It is a local-first teaching project; retrieval helps expose evidence but does not eliminate unsupported or incorrect model output.
+Local-first document Q&A with dense retrieval, source citations, retrieval evaluation and optional Ollama. StudyBuddy indexes study notes, retrieves semantically similar passages, and answers questions from those passages with source citations. It is a local-first teaching project; retrieval helps expose evidence but does not eliminate unsupported or incorrect model output.
 
 ## Architecture
 
