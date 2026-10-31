@@ -4,6 +4,8 @@ Local-first document Q&A with dense retrieval, source citations, retrieval evalu
 
 ## Architecture
 
+For module-by-module walkthroughs, reproduction steps, and interview concepts, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).
+
 1. Text, Markdown, PDF, and DOCX ingestion extracts text.
 2. Paragraph text is split into overlapping word chunks.
 3. A configurable embedding backend creates normalized dense vectors: Sentence Transformers (default) or Ollama.
